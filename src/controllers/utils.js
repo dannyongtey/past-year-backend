@@ -1,8 +1,4 @@
 import osmosis from 'osmosis'
-import { hashAsBigInt } from 'bigint-hash';
-import request from 'request-promise'
-import fs from 'fs-extra'
-import axios from 'axios'
 
 export function formatSubject(sub) {
     const noSpace = sub.replace(/\s/g, '')
@@ -47,11 +43,9 @@ export function isLoggedIn(cookie) {
 
 export function loginOsmosis() {
     const loginURL = 'https://proxyvlib.mmu.edu.my/login'
-    const url = `http://vlibcm.mmu.edu.my.proxyvlib.mmu.edu.my//xzamp/gxzam.php?action=42578.pdf`
 
     const {student_id, student_password} = process.env
     return new Promise((resolve, reject) => {
-        let headers
         osmosis
             .get(loginURL)
             .login(student_id, student_password)
