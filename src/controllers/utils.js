@@ -86,12 +86,11 @@ export function downloadPaperForID({ id, context }) {
     const url = `http://vlibcm.mmu.edu.my.proxyvlib.mmu.edu.my//xzamp/gxzam.php?action=${id}.pdf`
     return new Promise((resolve, reject) => {
         try {
-
         osmosis
-            .get(url)
+            // .get(url)
             .then(function (_, __, next) {
                 this.request('post', context, url, null, function (err, res, buffer) {
-                    resolve(buffer)
+                    resolve({id, buffer})
                     next()
                 })
             })
@@ -111,7 +110,6 @@ function extractDataFrom(str) {
     const subjectInfo = []
     if (!rawMatches) return subjectInfo
     rawMatches.forEach(match => {
-        console.log(match)
         const splitedID = match.replace('tabstract.php?id=', '').split('" title=')
         const splitedSubName = splitedID[1].replace('"More details">', '').split('</a> <b>')
         const splitedFaculty = splitedSubName[1].split('</b> <i>')
