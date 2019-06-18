@@ -50,7 +50,7 @@ export function loginOsmosis() {
             .get(loginURL)
             .login(student_id, student_password)
             .then(function (context, data, next) {
-                resolve(context)
+                resolve({context, cookie: context.request.headers.cookie})
             })
             .log(console.log)
             .error(console.log)
@@ -103,6 +103,7 @@ function extractDataFrom(str) {
     const regex = /tabstract.php\?id=(.+)<br>/gi
     const rawMatches = str.match(regex)
     const subjectInfo = []
+    if (!rawMatches) return subjectInfo
     rawMatches.forEach(match => {
         console.log(match)
         const splitedID = match.replace('tabstract.php?id=', '').split('" title=')
