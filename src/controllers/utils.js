@@ -85,6 +85,8 @@ export function extractSubjectDataFrom({ url, cookie }) {
 export function downloadPaperForID({ id, context }) {
     const url = `http://vlibcm.mmu.edu.my.proxyvlib.mmu.edu.my//xzamp/gxzam.php?action=${id}.pdf`
     return new Promise((resolve, reject) => {
+        try {
+
         osmosis
             .get(url)
             .then(function (_, __, next) {
@@ -96,6 +98,10 @@ export function downloadPaperForID({ id, context }) {
             .log(console.log)
             .error(console.log)
             .debug(console.log)
+        } catch (err){
+            reject(err)
+        }
+
     })
 }
 

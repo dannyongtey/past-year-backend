@@ -8,5 +8,6 @@ router.get('/', function(req, res, next) {
 });
 
 router.post('/search', controllers.SearchController)
+router.get('/download/single/:id', controllers.SingleDownloadController)
 
 export default router;
