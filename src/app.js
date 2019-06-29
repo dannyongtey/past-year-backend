@@ -5,6 +5,7 @@ import logger from 'morgan';
 import indexRouter from './routes/index';
 import dotenv from 'dotenv'
 import redis from 'redis'
+import cors from 'cors'
 
 export const redisClient = redis.createClient({ host: 'localhost', port: 6379 });
 
@@ -20,6 +21,7 @@ dotenv.config()
 const app = express();
 
 app.use(logger('dev'));
+app.use(cors())
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());

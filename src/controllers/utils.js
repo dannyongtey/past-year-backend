@@ -11,13 +11,15 @@ export function isValidSubject(sub) {
 }
 
 export function urlFor(code) {
-    const subjectParts = code.split(' ')
+    const formattedSubject = formatSubject(code)
+    const subjectParts = formattedSubject.split(' ')
     const search_url
         = `http://library.mmu.edu.my.proxyvlib.mmu.edu.my/library2/diglib/exam_col/resindex.php?df1=title&rt=${subjectParts[0]}%20${subjectParts[1]}&ph1=%&cmp1=&df2=&ra=&ph2=&cmp2=&ri=&rp=&rf=&ry1=&ry2=&df3=title&std=ASC&page=0&limit=50`
     return search_url
 }
 
 export function isLoggedIn(cookie) {
+    if (!cookie) return Promise.resolve(false)
     const testURL = urlFor('TSN 1101')
     let debugLog = ''
     osmosis.config('headers', { cookie })
@@ -44,19 +46,31 @@ export function isLoggedIn(cookie) {
 export function loginOsmosis() {
     const loginURL = 'https://proxyvlib.mmu.edu.my/login'
 
-    const {student_id, student_password} = process.env
+    const { student_id, student_password } = process.env
     return new Promise((resolve, reject) => {
-        osmosis
-            .get(loginURL)
-            .login(student_id, student_password)
-            .then(function (context, data, next) {
-                resolve({context, cookie: context.request.headers.cookie})
+        return new Promise((res, rej) => {
+            osmosis
+                .get(loginURL)
+                .then(function (context, data, next) {
+                    res({ context, cookie: context.request.headers.cookie })
+                })
+        }).then(({ context, cookie }) => {
+            isLoggedIn(cookie).then(hasLoggedIn => {
+                if (hasLoggedIn) {
+                    resolve({ context, cookie })
+                } else {
+                    osmosis
+                        .get(loginURL)
+                        .login(student_id, student_password)
+                        .then(function (context, data, next) {
+                            resolve({ context, cookie: context.request.headers.cookie })
+                        })
+                        .log(console.log)
+                        .error(console.log)
+                        .debug(console.log)
+                }
             })
-            .log(console.log)
-            .error(console.log)
-            .debug(console.log)
-
-
+        })
     })
 }
 
@@ -86,18 +100,18 @@ export function downloadPaperForID({ id, context }) {
     const url = `http://vlibcm.mmu.edu.my.proxyvlib.mmu.edu.my//xzamp/gxzam.php?action=${id}.pdf`
     return new Promise((resolve, reject) => {
         try {
-        osmosis
-            // .get(url)
-            .then(function (_, __, next) {
-                this.request('post', context, url, null, function (err, res, buffer) {
-                    resolve({id, buffer})
-                    next()
+            osmosis
+                // .get(url)
+                .then(function (_, __, next) {
+                    this.request('post', context, url, null, function (err, res, buffer) {
+                        resolve({ id, buffer })
+                        next()
+                    })
                 })
-            })
-            .log(console.log)
-            .error(console.log)
-            .debug(console.log)
-        } catch (err){
+                .log(console.log)
+                .error(console.log)
+                .debug(console.log)
+        } catch (err) {
             reject(err)
         }
 

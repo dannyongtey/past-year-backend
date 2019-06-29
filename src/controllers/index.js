@@ -4,7 +4,7 @@ import uuidv1 from 'uuid/v1'
 import constants from './constants'
 import { redisClient } from '../app'
 import fs from 'fs';
-import {promisify} from 'util';
+import { promisify } from 'util';
 
 
 export default {
@@ -34,6 +34,30 @@ export default {
         }
     },
 
+    async MultipleSingleDownloadController(req, res) {
+        const { body: { ids } } = req
+        const { context } = await utils.loginOsmosis()
+        const allPromises = []
+        ids.forEach(id => {
+            allPromises.push(
+                utils.downloadPaperForID({ context, id })
+            )
+        })
+        const papers = await Promise.all(allPromises)
+        let zip = new JSZip()
+        for (const paper of papers) {
+            if (paper) {
+                zip.file(`${paper.id}.pdf`, paper.buffer)
+            }
+        }
+        res.writeHead(200, {
+            'Content-Type': 'application/zip',
+            'Content-disposition': 'attachment;filename=' + 'files' + '.zip',
+        });
+        const zipFile = await zip.generateAsync({ type: "nodebuffer" })
+        res.end(zipFile)
+    },
+
     async MultipleDownloadController(req, res) {
         const { body: { subjects } } = req
         const downloadID = uuidv1()
@@ -59,10 +83,10 @@ export default {
             const idStats = JSON.parse(reply)
             if (idStats.status === constants.STATUS.DONE) {
                 let zip = new JSZip()
-                for (const subject of Object.keys(idStats.allSubjectData)){
+                for (const subject of Object.keys(idStats.allSubjectData)) {
                     const folder = zip.folder(subject)
                     const datas = idStats.allSubjectData[subject]
-                    for (const data of datas){
+                    for (const data of datas) {
                         const { id } = data
                         const buf = await readFileAsync(`/tmp/${id}.pdf`)
                         folder.file(`${id}.pdf`, buf)
@@ -93,7 +117,7 @@ async function multipleDownload(uuid, _, context, allSubjectData) {
                 [subject]: Promise.all(
                     details.map(detail => {
                         const { id } = detail
-                        if (fs.existsSync(`/tmp/${id}.pdf`)){
+                        if (fs.existsSync(`/tmp/${id}.pdf`)) {
                             return null
                         }
                         return utils.downloadPaperForID({ id, context })
@@ -106,7 +130,7 @@ async function multipleDownload(uuid, _, context, allSubjectData) {
     for (const promises of allPromises) {
         const files = await Object.values(promises)[0]
         files.forEach(file => {
-            if (file){
+            if (file) {
                 fs.writeFile(`/tmp/${file.id}.pdf`, file.buffer)
             }
         })
