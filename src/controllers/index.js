@@ -36,26 +36,22 @@ export default {
 
     async MultipleSingleDownloadController(req, res) {
         const { body: { ids } } = req
-        const { context } = await utils.loginOsmosis()
-        const allPromises = []
-        ids.forEach(id => {
-            allPromises.push(
-                utils.downloadPaperForID({ context, id })
-            )
-        })
-        const papers = await Promise.all(allPromises)
-        let zip = new JSZip()
-        for (const paper of papers) {
-            if (paper) {
-                zip.file(`${paper.id}.pdf`, paper.buffer)
-            }
+
+
+        const downloadID = uuidv1()
+        const idStats = {
+            status: constants.STATUS.FETCHING,
+            allSubjectData: ids,
         }
-        res.writeHead(200, {
-            'Content-Type': 'application/zip',
-            'Content-disposition': 'attachment;filename=' + 'files' + '.zip',
-        });
-        const zipFile = await zip.generateAsync({ type: "nodebuffer" })
-        res.end(zipFile)
+
+        multipleSingleDownload(downloadID, ids)
+        redisClient.set(downloadID, JSON.stringify(idStats))
+        res.status(200).json({
+            status: 'downloading',
+            message: "The files are being fetched and processed on the server.",
+            id: downloadID,
+        })
+
     },
 
     async MultipleDownloadController(req, res) {
@@ -83,15 +79,22 @@ export default {
             const idStats = JSON.parse(reply)
             if (idStats.status === constants.STATUS.DONE) {
                 let zip = new JSZip()
-                for (const subject of Object.keys(idStats.allSubjectData)) {
-                    const folder = zip.folder(subject)
-                    const datas = idStats.allSubjectData[subject]
-                    for (const data of datas) {
-                        const { id } = data
+                if (idStats.allSubjectData instanceof Array) {
+                    for (const id of idStats.allSubjectData) {
                         const buf = await readFileAsync(`/tmp/${id}.pdf`)
-                        folder.file(`${id}.pdf`, buf)
+                        zip.file(`${id}.pdf`, buf)
                     }
+                } else {
+                    for (const subject of Object.keys(idStats.allSubjectData)) {
+                        const folder = zip.folder(subject)
+                        const datas = idStats.allSubjectData[subject]
+                        for (const data of datas) {
+                            const { id } = data
+                            const buf = await readFileAsync(`/tmp/${id}.pdf`)
+                            folder.file(`${id}.pdf`, buf)
+                        }
 
+                    }
                 }
                 res.writeHead(200, {
                     'Content-Type': 'application/zip',
@@ -100,13 +103,40 @@ export default {
                 const zipFile = await zip.generateAsync({ type: "nodebuffer" })
                 res.end(zipFile)
             } else {
-                res.status(200).json({
+                res.status(404).json({
                     status: reply,
                     message: "The file is not ready yet. There is likely to be additional status messages above.",
                 })
             }
         })
     }
+}
+
+async function multipleSingleDownload(uuid, ids) {
+    const { context } = await utils.loginOsmosis()
+
+    const allPromises = []
+    ids.forEach(id => {
+        allPromises.push(
+            fs.existsSync(`/tmp/${id}.pdf`) ? Promise.resolve() : utils.downloadPaperForID({ context, id })
+        )
+    })
+    const papers = await Promise.all(allPromises)
+
+    for (const paper of papers) {
+        const {id, buffer} = paper
+        if (buffer) {
+            fs.writeFile(`/tmp/${id}.pdf`, buffer)
+        }
+    }
+
+    redisClient.get(uuid, (err, reply) => {
+        const idStats = JSON.parse(reply)
+        idStats.status = constants.STATUS.DONE
+        redisClient.set(uuid, JSON.stringify(idStats))
+    })
+    return { papers }
+
 }
 
 async function multipleDownload(uuid, _, context, allSubjectData) {
