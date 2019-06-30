@@ -4,7 +4,7 @@ Backend for MMU Vlib past year paper scrapper. Currently in active development. 
 
 ## Status
 
-Alpha. Single download and multiple download working already.
+Alpha. Fully working and compatible with front end code. Pull requests accepted at the moment. No known bugs.
 
 ## Disclaimer
 
