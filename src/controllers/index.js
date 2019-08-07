@@ -77,6 +77,9 @@ export default {
 
         redisClient.get(id, async (err, reply) => {
             const idStats = JSON.parse(reply)
+            if (!idStats){
+                return res.status(404).json({error: 'Shared ID not found.'})
+            }
             if (idStats.status === constants.STATUS.DONE) {
                 let zip = new JSZip()
                 if (idStats.allSubjectData instanceof Array) {
