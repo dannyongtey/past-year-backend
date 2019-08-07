@@ -22,7 +22,6 @@ const app = express();
 
 
 app.use(logger('dev'));
-app.use(authMiddleware)
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "http://localhost:9000");
   res.header("Access-Control-Allow-Credentials", "true");
@@ -32,6 +31,8 @@ app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Headers", "Authorization, Access-Control-Allow-Credentials, Access-Control-Allow-Origin, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Request-Method, Access-Control-Request-Headers");
   next();
 });
+app.use(authMiddleware)
+
 // app.use(cors(corsOptions))
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
