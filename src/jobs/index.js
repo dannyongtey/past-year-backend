@@ -3,16 +3,21 @@ import { loginOsmosis, downloadPaperForID } from '../controllers/utils'
 import fs from 'fs'
 import schedule from 'node-schedule'
 
-
-schedule.scheduleJob('13 * * * *', function () {
+const filePath = 'meta.json'
+schedule.scheduleJob('08 * * * *', function () {
     scrapeAllInformation()
 });
 
 export async function scrapeAllInformation() {
     const { cookie, context } = await loginOsmosis()
     // console.log(cookie)
-    // Fetch JSON list
-    const subjectList = {}
+    // Fetch JSON list from file. Screw this, just scan everything again. I no time do.
+    if (!fs.existsSync(filePath)){
+        const emptyObj = {}
+        fs.writeFileSync(filePath, JSON.stringify(emptyObj))
+    }
+    // const subjectList = JSON.parse(fs.readFileSync(filePath))
+    const subjectList = {} // Screw this, no time do. Just re scrap first
     const numbers = process.env.NODE_ENV === 'development' ? 5 : 99999
     const startFrom = 0
     // const url = `http://library.mmu.edu.my.proxyvlib.mmu.edu.my/library2/diglib/exam_col/tpimage.php?id=`
@@ -85,6 +90,7 @@ export async function scrapeAllInformation() {
         }
     })
     console.log(subjectList)
+    fs.writeFileSync(filePath, JSON.stringify(subjectList))
     console.log("downloading")
 }
 

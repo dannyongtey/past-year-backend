@@ -4,6 +4,7 @@
 ## build folder
 dist
 build
+meta.json 
 
 ### macOS ###
 # General

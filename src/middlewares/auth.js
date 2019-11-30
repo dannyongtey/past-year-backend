@@ -38,7 +38,7 @@ export default async function (req, res, next) {
 
     } catch (err) {
         // console.log(err.response.data)
-        res.status(403).json({ error: err.response.data })
+        res.status(403).json({ error: err.response? err.response.data : 'Unauthorized. Please provide correct token.'  })
     }
 
     // next()
