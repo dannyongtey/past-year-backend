@@ -42,6 +42,8 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use('/', indexRouter);
 
 // scrapeAllInformation()
+import _ from './jobs'
+
 
 export default app;
 

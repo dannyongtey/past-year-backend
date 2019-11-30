@@ -1,13 +1,19 @@
 import osmosis from 'osmosis'
 import { loginOsmosis, downloadPaperForID } from '../controllers/utils'
 import fs from 'fs'
+import schedule from 'node-schedule'
+
+
+schedule.scheduleJob('13 * * * *', function () {
+    scrapeAllInformation()
+});
 
 export async function scrapeAllInformation() {
     const { cookie, context } = await loginOsmosis()
     // console.log(cookie)
     // Fetch JSON list
     const subjectList = {}
-    const numbers = 5
+    const numbers = process.env.NODE_ENV === 'development' ? 5 : 99999
     const startFrom = 0
     // const url = `http://library.mmu.edu.my.proxyvlib.mmu.edu.my/library2/diglib/exam_col/tpimage.php?id=`
     const url = `http://library.mmu.edu.my/library2/diglib/exam_col/tpimage.php?id=`
@@ -44,7 +50,7 @@ export async function scrapeAllInformation() {
                                 try {
                                     const { buffer } = await downloadPaperForID({ id: dl, context })
                                     fs.writeFile(`/tmp/${id}-${dl}.pdf`, buffer)
-                                } catch (err){
+                                } catch (err) {
                                     console.log('error writing file', err)
                                 }
                             }
