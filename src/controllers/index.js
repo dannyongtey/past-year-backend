@@ -6,12 +6,33 @@ import { redisClient } from '../app'
 import fs from 'fs';
 import { promisify } from 'util';
 
+const readFileAsync = promisify(fs.readFile)
+const readDirAsync = promisify(fs.readdir)
 
 export default {
     async SearchController(req, res) {
         const { body: { subjects } } = req
         const { allSubjectData } = await getSubjectsDetailsAndContext(subjects)
         res.status(200).json(allSubjectData)
+    },
+
+    async NewSingleDownloadController(req, res) {
+        const { id } = req.params
+        const files = await readDirAsync('/tmp')
+        for (const file of files) {
+            if (file.split('-')[0] === id) {
+                // File found
+                const buffer = await readFileAsync(`/tmp/${file}`)
+                res.writeHead(200, {
+                    'Content-Type': 'application/pdf',
+                    'Content-disposition': 'attachment;filename=' + id + '.pdf',
+                });
+
+                res.end(new Buffer(buffer, 'null'));
+                return
+            }
+        }
+        res.status(404).json({ 'error': 'Paper not found for the given ID.' })
     },
 
     async SingleDownloadController(req, res) {
@@ -37,7 +58,6 @@ export default {
     async MultipleSingleDownloadController(req, res) {
         const { body: { ids } } = req
 
-
         const downloadID = uuidv1()
         const idStats = {
             status: constants.STATUS.FETCHING,
@@ -58,11 +78,11 @@ export default {
         const { body: { subjects } } = req
         const downloadID = uuidv1()
         let allSubjectData, context
-        if (Array.isArray(subjects)){
+        if (Array.isArray(subjects)) {
             ({ allSubjectData, context } = await getSubjectsDetailsAndContext(subjects))
         } else {
             const allSubjects = Object.keys(subjects) // Subject code number are at keys
-            ({ allSubjectData, context } = await getSubjectsDetailsAndContext(allSubjects))
+                ({ allSubjectData, context } = await getSubjectsDetailsAndContext(allSubjects))
         }
         console.log(allSubjectData)
         const idStats = {
@@ -80,12 +100,11 @@ export default {
 
     SendMultipleDownloadedFile(req, res) {
         const { params: { id } } = req
-        const readFileAsync = promisify(fs.readFile)
 
         redisClient.get(id, async (err, reply) => {
             const idStats = JSON.parse(reply)
-            if (!idStats){
-                return res.status(404).json({error: 'Shared ID not found.'})
+            if (!idStats) {
+                return res.status(404).json({ error: 'Shared ID not found.' })
             }
             if (idStats.status === constants.STATUS.DONE) {
                 let zip = new JSZip()
@@ -134,7 +153,7 @@ async function multipleSingleDownload(uuid, ids) {
     const papers = await Promise.all(allPromises)
 
     for (const paper of papers) {
-        const {id, buffer} = paper
+        const { id, buffer } = paper
         if (buffer) {
             fs.writeFile(`/tmp/${id}.pdf`, buffer)
         }

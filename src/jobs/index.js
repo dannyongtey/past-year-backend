@@ -80,17 +80,7 @@ export async function scrapeAllInformation() {
     })
     console.log(subjectList)
     console.log("downloading")
-    // downloadPapersForIDs(ids, context)
 }
 
-async function downloadPapersForIDs(ids, context) {
-    for (const id of ids) {
-        if (!fs.existsSync(`/tmp/${id}.pdf`)) {
-            const { buffer } = await downloadPaperForID({ id, context })
-            fs.writeFile(`/tmp/${id}.pdf`, buffer)
-        }
-    }
-
-}
 
 

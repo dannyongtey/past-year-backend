@@ -8,6 +8,7 @@ router.get('/', function(req, res, next) {
 });
 
 router.post('/search', controllers.SearchController)
+router.get('/download/:id', controllers.NewSingleDownloadController)
 router.get('/download/single/:id', controllers.SingleDownloadController)
 router.post('/download/single', controllers.MultipleSingleDownloadController)
 router.post('/download/multiple', controllers.MultipleDownloadController)

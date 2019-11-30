@@ -6,8 +6,6 @@ import indexRouter from './routes/index';
 import dotenv from 'dotenv'
 import redis from 'redis'
 import authMiddleware from './middlewares/auth'
-import {scrapeAllInformation} from './jobs'
-import _ from './jobs'
 
 export const redisClient = redis.createClient({ host: 'localhost', port: 6379 });
 
@@ -43,7 +41,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 app.use('/', indexRouter);
 
-scrapeAllInformation()
+// scrapeAllInformation()
 
 export default app;
 
