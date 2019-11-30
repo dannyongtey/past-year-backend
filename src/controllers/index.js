@@ -57,7 +57,14 @@ export default {
     async MultipleDownloadController(req, res) {
         const { body: { subjects } } = req
         const downloadID = uuidv1()
-        const { allSubjectData, context } = await getSubjectsDetailsAndContext(subjects)
+        let allSubjectData, context
+        if (Array.isArray(subjects)){
+            ({ allSubjectData, context } = await getSubjectsDetailsAndContext(subjects))
+        } else {
+            const allSubjects = Object.keys(subjects) // Subject code number are at keys
+            ({ allSubjectData, context } = await getSubjectsDetailsAndContext(allSubjects))
+        }
+        console.log(allSubjectData)
         const idStats = {
             status: constants.STATUS.FETCHING,
             allSubjectData
