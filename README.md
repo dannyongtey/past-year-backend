@@ -18,6 +18,10 @@ This project is meant to work only for Multimedia University, Malaysia students,
 - Single file download: Want a quick download for a particular ID? It's supported on our server!
 - ID Sharing - Downloaded past year papers and want to share it to your friends? Share the given ID so they can download the exact same files as you do!
 
+## Coming Features
+
+- Auto cache: Cache all possible past year papers for high speed content delivery.
+
 ## Tech Stack
 
 - NodeJS (OsmosisJS, ExpressJS, JSZip)
