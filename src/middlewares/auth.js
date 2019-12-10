@@ -1,7 +1,7 @@
-// import { OAuth2Client } from 'google-auth-library'
+import { OAuth2Client } from 'google-auth-library'
 
-// const GOOGLE_CLIENT_ID = process.env.google_client_id
-// const client = new OAuth2Client(GOOGLE_CLIENT_ID);
+const GOOGLE_CLIENT_ID = process.env.google_client_id
+const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 import axios from 'axios'
 import { redisClient } from '../app'
 import jwtDecode from 'jwt-decode'
@@ -9,7 +9,7 @@ import jwtDecode from 'jwt-decode'
 export default async function (req, res, next) {
     let link = `https://mmumobileapps.mmu.edu.my/api/userdetails?token=`
     try {
-        const token = req.headers.authorization.split(' ')[1]
+        const {token} = req.query
         redisClient.get(token, async (err, reply) => {
             const value = JSON.parse(reply)
             if (!value) {

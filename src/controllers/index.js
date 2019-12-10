@@ -5,14 +5,15 @@ import constants from './constants'
 import { redisClient } from '../app'
 import fs from 'fs';
 import { promisify } from 'util';
-import meta from '../../meta.json'
+// import meta from '../../meta.json'
 
 const readFileAsync = promisify(fs.readFile)
 const readDirAsync = promisify(fs.readdir)
 
 export default {
     async FileListController(req, res){
-        res.status(200).json({meta})
+        const file = JSON.parse(fs.readFileSync("meta.json"))
+        res.status(200).json(file)
     },
 
     async SearchController(req, res) {
