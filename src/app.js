@@ -6,8 +6,10 @@ import indexRouter from './routes/index';
 import dotenv from 'dotenv'
 import redis from 'redis'
 import authMiddleware from './middlewares/auth'
+dotenv.config()
 
-export const redisClient = redis.createClient({ host: 'localhost', port: 6379 });
+const {redis_port, redis_host} = process.env
+export const redisClient = redis.createClient({ host: redis_host || 'localhost', port: redis_port || 6379 });
 
 redisClient.on('ready', function () {
   console.log("Redis is ready");
@@ -17,7 +19,6 @@ redisClient.on('error', function () {
   console.log("Error in Redis");
 });
 
-dotenv.config()
 const app = express();
 
 

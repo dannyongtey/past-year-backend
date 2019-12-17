@@ -9,7 +9,9 @@ import jwtDecode from 'jwt-decode'
 export default async function (req, res, next) {
     let link = `https://mmumobileapps.mmu.edu.my/api/userdetails?token=`
     try {
-        const {token} = req.query
+        const { token } = req.query
+
+        if (!token) return res.status(403).json({ error: 'Unauthorized. Please provide correct token.' })
         redisClient.get(token, async (err, reply) => {
             const value = JSON.parse(reply)
             if (!value) {
@@ -18,10 +20,10 @@ export default async function (req, res, next) {
                     const { data } = await axios.get(link)
                     redisClient.set(token, JSON.stringify(data))
                     next()
-                }catch(err){
-                    res.status(403).json({error: 'Invalid token.'})
+                } catch (err) {
+                    res.status(403).json({ error: 'Invalid token.' })
                 }
-                
+
             } else {
                 // Check token validity
                 const { exp } = jwtDecode(token) // EXP in javascript need multiple 1000
@@ -38,7 +40,7 @@ export default async function (req, res, next) {
 
     } catch (err) {
         // console.log(err.response.data)
-        res.status(403).json({ error: err.response? err.response.data : 'Unauthorized. Please provide correct token.'  })
+        res.status(403).json({ error: err.response ? err.response.data : 'Unauthorized. Please provide correct token.' })
     }
 
     // next()
