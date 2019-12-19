@@ -11,16 +11,12 @@ const readFileAsync = promisify(fs.readFile)
 const readDirAsync = promisify(fs.readdir)
 
 export default {
-    async FileListController(req, res){
+    // API for Mobile
+    async FileListController(req, res) {
         const file = JSON.parse(fs.readFileSync("meta.json"))
         res.status(200).json(file)
     },
-
-    async SearchController(req, res) {
-        const { body: { subjects } } = req
-        const { allSubjectData } = await getSubjectsDetailsAndContext(subjects)
-        res.status(200).json(allSubjectData)
-    },
+    /// General API
 
     async NewSingleDownloadController(req, res) {
         const { id } = req.params
@@ -41,67 +37,48 @@ export default {
         res.status(404).json({ 'error': 'Paper not found for the given ID.' })
     },
 
-    async SingleDownloadController(req, res) {
-        const { params: { id } } = req
-        const { context } = await utils.loginOsmosis()
-        let buffer
+    async SearchController(req, res) {
+        const { body: { subjects } } = req
         try {
-            ({ buffer } = await utils.downloadPaperForID({ context, id }))
-        } catch (_) {
-            // res.status(404).send('Not found')
-        }
-        if (buffer) {
-            res.writeHead(200, {
-                'Content-Type': 'application/pdf',
-                'Content-disposition': 'attachment;filename=' + id + '.pdf',
-            });
-            res.end(new Buffer(buffer, 'null'));
-        } else {
-            res.status(404).json({ 'error': 'Paper not found for the given ID.' })
+            const formattedSubjects = subjects.map(subject => utils.formatSubject(subject))
+            const file = JSON.parse(fs.readFileSync("meta.json"))
+            const results = file.filter(record => formattedSubjects.includes(record.code))
+            res.status(200).json({ results })
+        } catch (error) {
+            res.status(422).json({ error: error.toString() })
         }
     },
 
     async MultipleSingleDownloadController(req, res) {
         const { body: { ids } } = req
-
-        const downloadID = uuidv1()
-        const idStats = {
-            status: constants.STATUS.FETCHING,
-            allSubjectData: ids,
+        const allPapers = []
+        for (const id of ids) {
+            const file = await utils.getFileById(id)
+            const fileInfo = { buffer: file, id }
+            allPapers.push(fileInfo)
         }
-
-        multipleSingleDownload(downloadID, ids)
-        redisClient.set(downloadID, JSON.stringify(idStats))
-        res.status(200).json({
-            status: 'downloading',
-            message: "The files are being fetched and processed on the server.",
-            id: downloadID,
-        })
-
+        const allPapersZipped = await utils.zip(allPapers)
+        res.writeHead(200, {
+            'Content-Type': 'application/zip',
+            'Content-disposition': 'attachment;filename=' + 'files' + '.zip',
+        });
+        res.end(allPapersZipped)
     },
 
     async MultipleDownloadController(req, res) {
         const { body: { subjects } } = req
-        const downloadID = uuidv1()
-        let allSubjectData, context
-        if (Array.isArray(subjects)) {
-            ({ allSubjectData, context } = await getSubjectsDetailsAndContext(subjects))
-        } else {
-            const allSubjects = Object.keys(subjects) // Subject code number are at keys
-                ({ allSubjectData, context } = await getSubjectsDetailsAndContext(allSubjects))
+        console.log(subjects)
+        try {
+            const zipFile = await utils.getFilesBySubjects(subjects)
+            res.writeHead(200, {
+                'Content-Type': 'application/zip',
+                'Content-disposition': 'attachment;filename=' + 'files' + '.zip',
+            });
+            res.end(zipFile)
+        }catch(err){
+            res.status(404).json({error: err.toString()})
         }
-        console.log(allSubjectData)
-        const idStats = {
-            status: constants.STATUS.FETCHING,
-            allSubjectData
-        }
-        redisClient.set(downloadID, JSON.stringify(idStats))
-        multipleDownload(downloadID, subjects, context, allSubjectData)
-        res.status(200).json({
-            status: "downloading",
-            message: "The files are being fetched and processed on the server.",
-            id: downloadID,
-        })
+
     },
 
     SendMultipleDownloadedFile(req, res) {

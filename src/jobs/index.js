@@ -6,9 +6,10 @@ import schedule from 'node-schedule'
 
 const filePath = 'meta.json'
 const papersPath = process.env.storage_path || '/tmp'
-// schedule.scheduleJob('53 * * * *', function () {
-scrapeAllInformation()
-// });
+schedule.scheduleJob('53 * * * *', function () {
+    console.log('Scraping papers')
+    scrapeAllInformation()
+});
 
 export async function scrapeAllInformation() {
     const tableColumns = {
