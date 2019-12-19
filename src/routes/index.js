@@ -13,5 +13,6 @@ router.get('/download/:id', controllers.NewSingleDownloadController)
 router.post('/download/single', controllers.MultipleSingleDownloadController)
 router.post('/download/multiple', controllers.MultipleDownloadController)
 router.get('/download/multiple/:id', controllers.SendMultipleDownloadedFile)
+router.post('/download/shared', controllers.SendFilesViaDownloadID)
 
 export default router;

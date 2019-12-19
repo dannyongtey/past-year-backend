@@ -6,12 +6,12 @@ import axios from 'axios'
 import { redisClient } from '../app'
 import jwtDecode from 'jwt-decode'
 
-export default async function (req, res, next) {
+export async function mmlsAuth (req, res, next) {
     let link = `https://mmumobileapps.mmu.edu.my/api/userdetails?token=`
     try {
         const { token } = req.query
 
-        if (!token) return res.status(403).json({ error: 'Unauthorized. Please provide correct token.' })
+        if (!token) return next()
         redisClient.get(token, async (err, reply) => {
             const value = JSON.parse(reply)
             if (!value) {
@@ -31,6 +31,7 @@ export default async function (req, res, next) {
                 if (new Date() > expiry) {
                     res.status(403).json({ error: 'Token expired. Please re-login' })
                 } else {
+                    res.locals.authorized = true
                     next()
                 }
             }
@@ -46,28 +47,28 @@ export default async function (req, res, next) {
     // next()
 }
 
-// export default async function (req, res, next) {
-//     if (req.method !== 'OPTIONS') {
-//         try {
-//             const authHeader = JSON.parse(req.header('authorization').split('Bearer ')[1])
-//             const { tokenId } = authHeader
-//             const ticket = await client.verifyIdToken({
-//                 idToken: tokenId,
-//                 audience: GOOGLE_CLIENT_ID,
-//             });
-//             const payload = ticket.getPayload();
-//             if (payload['hd'] !== 'student.mmu.edu.my') {
-//                 res.status(401).json({ error: 'Unauthorized. Please use MMU student email to login.' })
-//                 return
-//             } else {
-//                 next()
-//             }
-//         } catch {
-//             res.status(401).json({ error: 'Unauthorized. Please ensure you are logged in using official MMU Account.' })
-//             return
-//         }
-//     } else {
-//         next()
-//     }
+export async function googleAuth (req, res, next) {
+    if (req.method !== 'OPTIONS' && !res.locals.authorized) {
+        try {
+            const authHeader = JSON.parse(req.header('authorization').split('Bearer ')[1])
+            const { tokenId } = authHeader
+            const ticket = await client.verifyIdToken({
+                idToken: tokenId,
+                audience: GOOGLE_CLIENT_ID,
+            });
+            const payload = ticket.getPayload();
+            if (payload['hd'] !== 'student.mmu.edu.my') {
+                res.status(403).json({ error: 'Unauthorized. Please provide correct credentials.' })
+                return
+            } else {
+                next()
+            }
+        } catch {
+            res.status(403).json({ error: 'Unauthorized. Please provide correct credentials.' })
+            return
+        }
+    } else {
+        next()
+    }
 
-// }
+}

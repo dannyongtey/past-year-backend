@@ -2,6 +2,8 @@
 import { promisify } from 'util';
 import fs from 'fs'
 import JSZip from 'jszip'
+import { redisClient } from '../app'
+
 
 const papersPath = process.env.storage_path || '/tmp'
 
@@ -16,6 +18,25 @@ export function formatSubject(sub) {
 export function isValidSubject(sub) {
     const noSpace = sub.replace(/\s/g, '')
     return pattern.test(noSpace)
+}
+
+export function readFromRedis(key) {
+    return new Promise((resolve, reject) => {
+        redisClient.get(key, (err, reply) => {
+            if (reply) resolve(JSON.parse(reply))
+            else resolve(reply)
+        })
+    })
+}
+
+export function saveToRedis(key, value) {
+    redisClient.get(key, (err, reply) => {
+        if (!reply) {
+            redisClient.set(key, JSON.stringify(value))
+        } else {
+            throw new Error("ID already exists")
+        }
+    })
 }
 
 export async function getFileById(id) {
@@ -40,7 +61,7 @@ export async function getFilesBySubject(subCode) {
         for (const file of files) {
             if (file.split('-')[0] == paper.id) {
                 // File found
-                
+
                 const buffer = await readFileAsync(`${papersPath}/${file}`)
                 papers.push({ buffer: new Buffer(buffer), id: paper.id })
             }

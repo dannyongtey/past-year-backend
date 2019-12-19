@@ -4,6 +4,7 @@ import uuidv1 from 'uuid/v1'
 import constants from './constants'
 import { redisClient } from '../app'
 import fs from 'fs';
+import app from '../app'
 import { promisify } from 'util';
 // import meta from '../../meta.json'
 
@@ -50,7 +51,7 @@ export default {
     },
 
     async MultipleSingleDownloadController(req, res) {
-        const { body: { ids } } = req
+        const { body: { ids, id } } = req
         const allPapers = []
         for (const id of ids) {
             const file = await utils.getFileById(id)
@@ -63,10 +64,11 @@ export default {
             'Content-disposition': 'attachment;filename=' + 'files' + '.zip',
         });
         res.end(allPapersZipped)
+        utils.saveToRedis(id, { type: constants.TYPE.IDS, contents: ids }) // Save IDs
     },
 
     async MultipleDownloadController(req, res) {
-        const { body: { subjects } } = req
+        const { body: { subjects, id } } = req
         console.log(subjects)
         try {
             const zipFile = await utils.getFilesBySubjects(subjects)
@@ -75,10 +77,30 @@ export default {
                 'Content-disposition': 'attachment;filename=' + 'files' + '.zip',
             });
             res.end(zipFile)
-        }catch(err){
-            res.status(404).json({error: err.toString()})
+        } catch (err) {
+            res.status(404).json({ error: err.toString() })
         }
+        utils.saveToRedis(id, { type: constants.TYPE.SUBJECTS, contents: subjects }) // Save IDs
+    },
 
+    async SendFilesViaDownloadID(req, res, next) {
+        const { body: { id } } = req
+        const reply = await utils.readFromRedis(id)
+        if (reply) {
+            if (reply.type === constants.TYPE.IDS) {
+                req.url = '/download/single' // Path to download by ID
+                req.body.ids = reply.contents
+                return app._router.handle(req, res, next)
+            } else if (reply.type === constants.TYPE.SUBJECTS) {
+                req.url = '/download/multiple'
+                req.body.subjects = reply.contents
+                return app._router.handle(req, res, next)
+            } else {
+                res.status(422).json({ error: "Unknown error" })
+            }
+        } else {
+            res.status(404).json({ error: 'Not found' })
+        }
     },
 
     SendMultipleDownloadedFile(req, res) {

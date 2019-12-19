@@ -5,7 +5,7 @@ import logger from 'morgan';
 import indexRouter from './routes/index';
 import dotenv from 'dotenv'
 import redis from 'redis'
-import authMiddleware from './middlewares/auth'
+import * as authMiddleware from './middlewares/auth'
 dotenv.config()
 
 const {redis_port, redis_host} = process.env
@@ -32,7 +32,8 @@ app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Headers", "Authorization, Access-Control-Allow-Credentials, Access-Control-Allow-Origin, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Request-Method, Access-Control-Request-Headers");
   next();
 });
-// app.use(authMiddleware)
+app.use(authMiddleware.mmlsAuth)
+app.use(authMiddleware.googleAuth)
 
 // app.use(cors(corsOptions))
 app.use(express.json());
