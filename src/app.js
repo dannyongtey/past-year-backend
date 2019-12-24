@@ -7,6 +7,7 @@ import logger from 'morgan';
 import indexRouter from './routes/index';
 import dotenv from 'dotenv'
 import redis from 'redis'
+import {scrapeAllInformation} from './jobs'
 import * as authMiddleware from './middlewares/auth'
 dotenv.config()
 
@@ -44,6 +45,8 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, '../public')));
 
 app.use('/', indexRouter);
+
+scrapeAllInformation()
 
 // scrapeAllInformation()
 import _ from './jobs'
