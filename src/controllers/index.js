@@ -52,6 +52,7 @@ export default {
 
     async MultipleSingleDownloadController(req, res) {
         const { body: { ids, id } } = req
+        console.log(ids)
         const allPapers = []
         for (const id of ids) {
             const file = await utils.getFileById(id)

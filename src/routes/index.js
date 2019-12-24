@@ -9,8 +9,8 @@ router.get('/', function(req, res, next) {
 
 router.post('/search', controllers.SearchController)
 router.get('/meta', controllers.FileListController)
-router.get('/download/:id', controllers.NewSingleDownloadController)
 router.post('/download/single', controllers.MultipleSingleDownloadController)
+router.get('/download/:id', controllers.NewSingleDownloadController)
 router.post('/download/multiple', controllers.MultipleDownloadController)
 router.post('/download/shared', controllers.SendFilesViaDownloadID)
 

@@ -1,3 +1,5 @@
+import 'babel-polyfill';
+
 import express from 'express';
 import path from 'path';
 import cookieParser from 'cookie-parser';
@@ -32,8 +34,8 @@ app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Headers", "Authorization, Access-Control-Allow-Credentials, Access-Control-Allow-Origin, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Request-Method, Access-Control-Request-Headers");
   next();
 });
-app.use(authMiddleware.mmlsAuth)
-app.use(authMiddleware.googleAuth)
+// app.use(authMiddleware.mmlsAuth)
+// app.use(authMiddleware.googleAuth)
 
 // app.use(cors(corsOptions))
 app.use(express.json());
