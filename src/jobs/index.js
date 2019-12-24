@@ -6,7 +6,7 @@ import schedule from 'node-schedule'
 
 const filePath = 'meta.json'
 const papersPath = process.env.storage_path || '/tmp'
-schedule.scheduleJob('00 * * * *', function () {
+schedule.scheduleJob('01 * * * *', function () {
     scrapeAllInformation()
 });
 
