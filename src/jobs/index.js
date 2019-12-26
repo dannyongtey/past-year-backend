@@ -54,51 +54,60 @@ export async function scrapeAllInformation() {
         return new Promise((resolve, reject) => {
             const id = 10000 + i + startFrom
             setTimeout(() => {
+                console.log(id)
                 const link = `http://library.mmu.edu.my/library2/diglib/exam_col/tpimage.php?id=${id}`
                 axios.get(link)
                     .then(async (response) => {
                         const info = {}
                         const $ = cheerio.load(response.data)
                         const pdfLink = $('input[name="xfile"]').attr("value")
-                        const downloadURL = `http://vlibcm.mmu.edu.my//xzamp/gxzam.php?action=${pdfLink}`
-                        const infoTable = $("table[cellpadding=5]")
-                        if (!fs.existsSync(`/tmp/${id}-${pdfLink}`)) {
-                            try {
-                                const res = await axios.post(downloadURL, {}, config)
-                                const buffer = new Buffer(res.data)
-                                fs.writeFileSync(`${papersPath}/${id}-${pdfLink}`, buffer)
-                            } catch (err) {
-                                console.log('error writing file', err)
-                            }
-                        }
-                        info['id'] = id
-                        infoTable.find('tbody tr').each((_, element) => {
-                            const row = $(element).text()
-                            Object.entries(tableColumns).forEach(([column, key]) => {
-                                const possibleAnswers = row.replace(column, "")
-                                if (possibleAnswers.length != row.length) {
-                                    // if (possibleAnswers && possibleAnswers.length > 1) { // If > 1 means column and answer both available
-                                    if (key === 'title') {
-                                        const rawCodeArray = possibleAnswers.split('-')
-                                        const rawCode = rawCodeArray[rawCodeArray.length - 1].replace(/\s/g, '')
-                                        const regex = /[A-Z]{3}[0-9]{4}/g
-                                        const subCode = rawCode.match(regex) ? rawCode.match(regex)[0] : 'undefined'
-                                        info['code'] = subCode
-                                        info['subject'] = possibleAnswers.trim()
-                                    } else if (key === 'faculty') {
-                                        info[key] = possibleAnswers.split(", Multimedia University")[0].trim()
-                                    } else {
-                                        info[key] = possibleAnswers.trim()
-                                    }
+                        if (!pdfLink) {
+                            resolve(null)
+                        } else {
+                            const downloadURL = `http://vlibcm.mmu.edu.my//xzamp/gxzam.php?action=${pdfLink}`
+                            const infoTable = $("table[cellpadding=5]")
+                            if (!fs.existsSync(`/tmp/${id}-${pdfLink}`)) {
+                                try {
+                                    const res = await axios.post(downloadURL, {}, config)
+                                    const buffer = new Buffer(res.data)
+                                    fs.writeFileSync(`${papersPath}/${id}-${pdfLink}`, buffer)
+                                } catch (err) {
+                                    console.log('error writing file', err)
+                                    // reject(new Error('Paper not found'))
+                                    resolve(null)
                                 }
+                            }
+                            info['id'] = id
+                            infoTable.find('tbody tr').each((_, element) => {
+                                const row = $(element).text()
+                                Object.entries(tableColumns).forEach(([column, key]) => {
+                                    const possibleAnswers = row.replace(column, "")
+                                    if (possibleAnswers.length != row.length) {
+                                        // if (possibleAnswers && possibleAnswers.length > 1) { // If > 1 means column and answer both available
+                                        if (key === 'title') {
+                                            const rawCodeArray = possibleAnswers.split('-')
+                                            const rawCode = rawCodeArray[rawCodeArray.length - 1].replace(/\s/g, '')
+                                            const regex = /[A-Z]{3}[0-9]{4}/g
+                                            const subCode = rawCode.match(regex) ? rawCode.match(regex)[0] : 'undefined'
+                                            info['code'] = subCode
+                                            info['subject'] = possibleAnswers.trim()
+                                        } else if (key === 'faculty') {
+                                            info[key] = possibleAnswers.split(", Multimedia University")[0].trim()
+                                        } else {
+                                            info[key] = possibleAnswers.trim()
+                                        }
+                                    }
+                                })
                             })
-                        })
-                        resolve(info)
-                    }, (error) => reject(error));
+                            resolve(info)
+                        }
+                    }, (error) => { resolve(null); console.log(error) });
             }, i * 15)
         })
     }))
+    // let results
     const results = await searchPromises()
+
     results.forEach(result => {
         if (result) {
             const subCode = result['code']
