@@ -48,7 +48,7 @@ app.use('/', indexRouter);
 
 scrapeAllInformation()
 
-// scrapeAllInformation()
+
 import _ from './jobs'
 
 
