@@ -48,7 +48,7 @@ export async function scrapeAllInformation() {
     // const subjectList = JSON.parse(fs.readFileSync(filePath))
     const subjectList = {} // Screw this, no time do. Just re scrap first
     const finalList = []
-    const numbers = process.env.NODE_ENV === 'development' ? 50 : 99999
+    const numbers = process.env.NODE_ENV === 'development' ? 50 : 500
     const startFrom = 0
     const searchPromises = () => Promise.all([...Array(numbers)].map((_, i) => {
         return new Promise((resolve, reject) => {
