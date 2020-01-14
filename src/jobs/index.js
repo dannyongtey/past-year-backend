@@ -102,7 +102,7 @@ export async function scrapeAllInformation() {
                             resolve(info)
                         }
                     }, (error) => { resolve(null); console.log(error) });
-            }, i * 15)
+            }, i * 1000)
         })
     }))
     // let results
