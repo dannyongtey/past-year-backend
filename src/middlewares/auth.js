@@ -11,7 +11,7 @@ export async function mmlsAuth (req, res, next) {
     try {
         const { token } = req.query
 
-        if (!token) return res.status(403).json({error: 'No token provided.'})
+        if (!token) return next()
         redisClient.get(token, async (err, reply) => {
             const value = JSON.parse(reply)
             if (!value) {

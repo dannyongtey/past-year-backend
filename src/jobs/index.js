@@ -102,7 +102,7 @@ export async function scrapeAllInformation() {
                             resolve(info)
                         }
                     }, (error) => { resolve(null); console.log(error) });
-            }, i * 1000)
+            }, i * process.env.NODE_ENV === 'development' ? 15 : 1000)
         })
     }))
     // let results

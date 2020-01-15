@@ -65,11 +65,15 @@ export default {
             'Content-disposition': 'attachment;filename=' + 'files' + '.zip',
         });
         res.end(allPapersZipped)
-        utils.saveToRedis(id, { type: constants.TYPE.IDS, contents: ids }) // Save IDs
+        try{
+            utils.saveToRedis(id, { type: constants.TYPE.IDS, contents: ids }) // Save IDs
+        }catch(_){
+
+        }
     },
 
     async MultipleDownloadController(req, res) {
-        const { body: { subjects, id } } = req
+        const { body: { subjects, id, type } } = req
         console.log(subjects)
         try {
             const zipFile = await utils.getFilesBySubjects(subjects)
@@ -77,15 +81,18 @@ export default {
                 'Content-Type': 'application/zip',
                 'Content-disposition': 'attachment;filename=' + 'files' + '.zip',
             });
-            res.end(zipFile)
+            res.end(zipFile, 'binary')
         } catch (err) {
             res.status(404).json({ error: err.toString() })
         }
-        utils.saveToRedis(id, { type: constants.TYPE.SUBJECTS, contents: subjects }) // Save IDs
+        if (type !== 'shared'){
+            utils.saveToRedis(id, { type: constants.TYPE.SUBJECTS, contents: subjects }) // Save IDs
+        }
     },
 
     async SendFilesViaDownloadID(req, res, next) {
         const { body: { id } } = req
+        console.log(id)
         const reply = await utils.readFromRedis(id)
         if (reply) {
             if (reply.type === constants.TYPE.IDS) {
