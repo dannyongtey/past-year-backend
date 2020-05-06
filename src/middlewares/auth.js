@@ -47,28 +47,28 @@ export async function mmlsAuth (req, res, next) {
     // next()
 }
 
-export async function googleAuth (req, res, next) {
-    if (req.method !== 'OPTIONS' && !res.locals.authorized) {
-        try {
-            const authHeader = JSON.parse(req.header('authorization').split('Bearer ')[1])
-            const { tokenId } = authHeader
-            const ticket = await client.verifyIdToken({
-                idToken: tokenId,
-                audience: GOOGLE_CLIENT_ID,
-            });
-            const payload = ticket.getPayload();
-            if (payload['hd'] !== 'student.mmu.edu.my') {
-                res.status(403).json({ error: 'Unauthorized. Please provide correct credentials.' })
-                return
-            } else {
-                next()
-            }
-        } catch {
-            res.status(403).json({ error: 'Unauthorized. Please provide correct credentials.' })
-            return
-        }
-    } else {
-        next()
-    }
+// export async function googleAuth (req, res, next) {
+//     if (req.method !== 'OPTIONS' && !res.locals.authorized) {
+//         try {
+//             const authHeader = JSON.parse(req.header('authorization').split('Bearer ')[1])
+//             const { tokenId } = authHeader
+//             const ticket = await client.verifyIdToken({
+//                 idToken: tokenId,
+//                 audience: GOOGLE_CLIENT_ID,
+//             });
+//             const payload = ticket.getPayload();
+//             if (payload['hd'] !== 'student.mmu.edu.my') {
+//                 res.status(403).json({ error: 'Unauthorized. Please provide correct credentials.' })
+//                 return
+//             } else {
+//                 next()
+//             }
+//         } catch {
+//             res.status(403).json({ error: 'Unauthorized. Please provide correct credentials.' })
+//             return
+//         }
+//     } else {
+//         next()
+//     }
 
-}
+// }

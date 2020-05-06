@@ -6,7 +6,7 @@ import schedule from 'node-schedule'
 
 const filePath = 'meta.json'
 const papersPath = process.env.storage_path || '/tmp'
-schedule.scheduleJob('* * * * * 1', function () {
+schedule.scheduleJob('* * * * * 7', function () {
     scrapeAllInformation()
 });
 
@@ -40,6 +40,7 @@ export async function scrapeAllInformation() {
     const bodyFormData = new FormData();
     bodyFormData.append("x", 9)
     bodyFormData.append("y", 13)
+
     // Fetch JSON list from file. Screw this, just scan everything again. I no time do.
     if (!fs.existsSync(filePath)) {
         const emptyObj = {}
@@ -48,7 +49,7 @@ export async function scrapeAllInformation() {
     // const subjectList = JSON.parse(fs.readFileSync(filePath))
     const subjectList = {} // Screw this, no time do. Just re scrap first
     const finalList = []
-    const numbers = process.env.NODE_ENV === 'development' ? 50 : 80000
+    const numbers = process.env.NODE_ENV === 'development' ? 50 : 89999
     const startFrom = 0
     const searchPromises = () => Promise.all([...Array(numbers)].map((_, i) => {
         return new Promise((resolve, reject) => {
@@ -66,7 +67,7 @@ export async function scrapeAllInformation() {
                         } else {
                             const downloadURL = `http://vlibcm.mmu.edu.my//xzamp/gxzam.php?action=${pdfLink}`
                             const infoTable = $("table[cellpadding=5]")
-                            if (!fs.existsSync(`/tmp/${id}-${pdfLink}`)) {
+                            if (!fs.existsSync(`${papersPath}/${id}-${pdfLink}`)) {
                                 try {
                                     const res = await axios.post(downloadURL, {}, config)
                                     const buffer = new Buffer(res.data)
@@ -106,7 +107,12 @@ export async function scrapeAllInformation() {
         })
     }))
     // let results
-    const results = await searchPromises()
+    let results = []
+    try {
+        results = await searchPromises()
+    } catch(err) {
+        console.log(err)
+    }
 
     results.forEach(result => {
         if (result) {
