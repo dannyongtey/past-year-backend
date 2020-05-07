@@ -23,7 +23,7 @@ export default {
         const { id } = req.params
         const files = await readDirAsync('/tmp')
         for (const file of files) {
-            if (file.split('-')[0] === id) {
+            if (file.split('.')[0] === id) {
                 // File found
                 const buffer = await readFileAsync(`/tmp/${file}`)
                 res.writeHead(200, {

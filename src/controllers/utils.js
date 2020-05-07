@@ -42,7 +42,7 @@ export function saveToRedis(key, value) {
 export async function getFileById(id) {
     const files = await readDirAsync(papersPath)
     for (const file of files) {
-        if (file.split('-')[0] == id) {
+        if (file.split('.')[0] == id) {
             // File found
             const buffer = await readFileAsync(`${papersPath}/${file}`)
             return new Buffer(buffer)
@@ -59,7 +59,7 @@ export async function getFilesBySubject(subCode) {
     const papers = []
     for (const paper of record.papers) {
         for (const file of files) {
-            if (file.split('-')[0] == paper.id) {
+            if (file.split('.')[0] == paper.id) {
                 // File found
 
                 const buffer = await readFileAsync(`${papersPath}/${file}`)
