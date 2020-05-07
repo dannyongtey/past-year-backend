@@ -11,7 +11,7 @@ export async function mmlsAuth (req, res, next) {
     try {
         const { token } = req.query
 
-        if (!token) return next()
+        if (token === process.env.ADMIN_TOKEN) return next()
         redisClient.get(token, async (err, reply) => {
             const value = JSON.parse(reply)
             if (!value) {
