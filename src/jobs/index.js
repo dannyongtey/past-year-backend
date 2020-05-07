@@ -55,6 +55,9 @@ export async function scrapeAllInformation() {
     for (let i = 0; i < numbers; i++) {
         const id = 10000 + i + startFrom
         console.log(id)
+        if (fs.existsSync(`${papersPath}/${id}.pdf`)) {
+            continue
+        }
         const link = `http://library.mmu.edu.my/library2/diglib/exam_col/tpimage.php?id=${id}`
         try {
             const response = await axios.get(link)
@@ -67,11 +70,11 @@ export async function scrapeAllInformation() {
             } else {
                 const downloadURL = `http://vlibcm.mmu.edu.my//xzamp/gxzam.php?action=${pdfLink}`
                 const infoTable = $("table[cellpadding=5]")
-                if (!fs.existsSync(`${papersPath}/${id}-${pdfLink}`)) {
+                if (!fs.existsSync(`${papersPath}/${id}.pdf`)) {
                     try {
                         const res = await axios.post(downloadURL, {}, config)
                         const buffer = new Buffer(res.data)
-                        fs.writeFileSync(`${papersPath}/${id}-${pdfLink}`, buffer)
+                        fs.writeFileSync(`${papersPath}/${id}.pdf`, buffer)
                     } catch (err) {
                         console.log('error writing file', err)
                         // reject(new Error('Paper not found'))
