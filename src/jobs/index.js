@@ -49,10 +49,10 @@ export async function scrapeAllInformation() {
     // const subjectList = JSON.parse(fs.readFileSync(filePath))
     const subjectList = {} // Screw this, no time do. Just re scrap first
     const finalList = []
-    // const numbers = process.env.NODE_ENV === 'development' ? 50 : 89999
+    const numbers = process.env.NODE_ENV === 'development' ? 50 : 89999
     const startFrom = 0
     const results = []
-    for (let i = 0; i < 89999; i++) {
+    for (let i = 0; i < numbers; i++) {
         const id = 10000 + i + startFrom
         console.log(id)
         const link = `http://library.mmu.edu.my/library2/diglib/exam_col/tpimage.php?id=${id}`
