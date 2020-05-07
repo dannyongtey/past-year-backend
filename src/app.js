@@ -53,7 +53,7 @@ const app = express();
 
 app.use(morganLogger('dev'));
 app.use(function (req, res, next) {
-  res.header("Access-Control-Allow-Origin", "http://localhost:9000");
+  res.header("Access-Control-Allow-Origin", process.env.NODE_ENV == 'development' ? "http://localhost:8000" : 'https://pastyear.dannyits.me');
   res.header("Access-Control-Allow-Credentials", "true");
   // res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
   // res.header("Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
@@ -62,7 +62,7 @@ app.use(function (req, res, next) {
   next();
 });
 app.use(authMiddleware.mmlsAuth)
-// app.use(authMiddleware.googleAuth)
+app.use(authMiddleware.googleAuth)
 
 // app.use(cors())
 app.use(express.json());
