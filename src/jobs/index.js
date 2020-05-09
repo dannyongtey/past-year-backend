@@ -54,6 +54,7 @@ export async function scrapeAllInformation() {
     const results = []
     for (let i = 0; i < numbers; i++) {
         const id = 10000 + i + startFrom
+        console.log(id)
         const link = `http://library.mmu.edu.my/library2/diglib/exam_col/tpimage.php?id=${id}`
         try {
             const response = await axios.get(link)
