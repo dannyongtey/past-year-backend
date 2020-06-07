@@ -6,11 +6,12 @@ import schedule from 'node-schedule'
 
 const filePath = 'meta.json'
 const papersPath = process.env.storage_path || '/tmp'
-schedule.scheduleJob('* * * * * 7', function () {
+schedule.scheduleJob('* * * * * 1', function () {
     scrapeAllInformation()
 });
 
 export async function scrapeAllInformation() {
+    console.log('should be called once')
     const tableColumns = {
         'Collection Type': 'type',
         'Title': 'title',
@@ -41,13 +42,19 @@ export async function scrapeAllInformation() {
     bodyFormData.append("x", 9)
     bodyFormData.append("y", 13)
 
+    let subjectList = {} // Screw this, no time do. Just re scrap first
     // Fetch JSON list from file. Screw this, just scan everything again. I no time do.
     if (!fs.existsSync(filePath)) {
         const emptyObj = {}
         fs.writeFileSync(filePath, JSON.stringify(emptyObj))
+    } else {
+        try {
+            subjectList = JSON.parse(fs.readFileSync(filePath))
+        } catch (_) {
+            subjectList = {}
+        }
     }
     // const subjectList = JSON.parse(fs.readFileSync(filePath))
-    const subjectList = {} // Screw this, no time do. Just re scrap first
     const finalList = []
     const numbers = process.env.NODE_ENV === 'development' ? 50 : 89999
     const startFrom = 0
@@ -72,35 +79,35 @@ export async function scrapeAllInformation() {
                         const res = await axios.post(downloadURL, {}, config)
                         const buffer = new Buffer(res.data)
                         fs.writeFileSync(`${papersPath}/${id}.pdf`, buffer)
+                        info['id'] = id
+                        infoTable.find('tbody tr').each((_, element) => {
+                            const row = $(element).text()
+                            Object.entries(tableColumns).forEach(([column, key]) => {
+                                const possibleAnswers = row.replace(column, "")
+                                if (possibleAnswers.length != row.length) {
+                                    // if (possibleAnswers && possibleAnswers.length > 1) { // If > 1 means column and answer both available
+                                    if (key === 'title') {
+                                        const rawCodeArray = possibleAnswers.split('-')
+                                        const rawCode = rawCodeArray[rawCodeArray.length - 1].replace(/\s/g, '')
+                                        const regex = /[A-Z]{3}[0-9]{4}/g
+                                        const subCode = rawCode.match(regex) ? rawCode.match(regex)[0] : 'undefined'
+                                        info['code'] = subCode
+                                        info['subject'] = possibleAnswers.trim()
+                                    } else if (key === 'faculty') {
+                                        info[key] = possibleAnswers.split(", Multimedia University")[0].trim()
+                                    } else {
+                                        info[key] = possibleAnswers.trim()
+                                    }
+                                }
+                            })
+                        })
+                        results.push(info)
                     } catch (err) {
                         console.log('error writing file', err)
                         // reject(new Error('Paper not found'))
                         continue
                     }
                 }
-                info['id'] = id
-                infoTable.find('tbody tr').each((_, element) => {
-                    const row = $(element).text()
-                    Object.entries(tableColumns).forEach(([column, key]) => {
-                        const possibleAnswers = row.replace(column, "")
-                        if (possibleAnswers.length != row.length) {
-                            // if (possibleAnswers && possibleAnswers.length > 1) { // If > 1 means column and answer both available
-                            if (key === 'title') {
-                                const rawCodeArray = possibleAnswers.split('-')
-                                const rawCode = rawCodeArray[rawCodeArray.length - 1].replace(/\s/g, '')
-                                const regex = /[A-Z]{3}[0-9]{4}/g
-                                const subCode = rawCode.match(regex) ? rawCode.match(regex)[0] : 'undefined'
-                                info['code'] = subCode
-                                info['subject'] = possibleAnswers.trim()
-                            } else if (key === 'faculty') {
-                                info[key] = possibleAnswers.split(", Multimedia University")[0].trim()
-                            } else {
-                                info[key] = possibleAnswers.trim()
-                            }
-                        }
-                    })
-                })
-                results.push(info)
             }
         } catch (_) {
 
