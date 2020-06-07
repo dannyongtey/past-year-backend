@@ -6,7 +6,7 @@ import schedule from 'node-schedule'
 
 const filePath = 'meta.json'
 const papersPath = process.env.storage_path || '/tmp'
-schedule.scheduleJob('* * * * * 1', function () {
+schedule.scheduleJob({hour: 2, minute: 30, dayOfWeek: 0}, function () {
     scrapeAllInformation()
 });
 
@@ -49,14 +49,20 @@ export async function scrapeAllInformation() {
         fs.writeFileSync(filePath, JSON.stringify(emptyObj))
     } else {
         try {
-            subjectList = JSON.parse(fs.readFileSync(filePath))
+            const tempList = JSON.parse(fs.readFileSync(filePath))
+            tempList.forEach(subject => {
+                subjectList[subject.code] = []
+                subject.papers.forEach(paper => {
+                    subjectList[subject.code].push({ subject: subject.subject, faculty: subject.faculty, id: paper.id, frequency: paper.sem, year: paper.year })
+                })
+            })
         } catch (_) {
             subjectList = {}
         }
     }
     // const subjectList = JSON.parse(fs.readFileSync(filePath))
     const finalList = []
-    const numbers = process.env.NODE_ENV === 'development' ? 50 : 89999
+    const numbers = process.env.NODE_ENV === 'development' ? 12 : 89999
     const startFrom = 0
     const results = []
     for (let i = 0; i < numbers; i++) {
@@ -190,8 +196,11 @@ export async function scrapeAllInformation() {
             }
         }
     })
+    // {'CLC1020': [{id,code,sub}, {}]}
+
     Object.entries(subjectList).forEach(([subCode, info]) => {
         const newObj = {}
+        console.log(subCode, info)
         newObj['code'] = subCode
         newObj['subject'] = info[0].subject || info[0].title || null
         newObj['faculty'] = info[0].faculty
